@@ -1,0 +1,57 @@
+"""Rules of the chat service, checked with real calls."""
+import json
+
+import pytest
+from fastapi.testclient import TestClient
+
+import app as chat_app
+import tools
+from agent import HAND_OFF_REPLY
+from app import GREETING, app
+
+MAYA = "maya.ross@example.com"
+
+pytestmark = pytest.mark.live
+
+client = TestClient(app)
+
+
+def send(message, session_id=None):
+    body = {"session_id": session_id, "message": message}
+    return client.post("/chat", json=body).json()
+
+
+def test_session_remembers_the_order():
+    first = send("Where is my order DS-20417?")
+    second = send("Which order did I ask about?", first["session_id"])
+    assert "DS-20417" in second["reply"]
+
+
+def test_only_the_first_reply_says_it_is_an_ai():
+    first = send("Hi, I have a question.")
+    second = send("Do you sell laptops?", first["session_id"])
+    assert first["reply"].startswith(GREETING)
+    assert GREETING not in second["reply"]
+
+
+def test_reply_carries_the_intent():
+    reply = send("My order DS-20417 is late. Where is it?")
+    assert reply["intent"]["intent"] == "order_status"
+    assert reply["intent"]["language"] == "en"
+
+
+@pytest.fixture
+def cases(tmp_path, monkeypatch):
+    path = tmp_path / "cases.jsonl"
+    monkeypatch.setattr(tools, "CASES", str(path))
+    return lambda: ([json.loads(x) for x in path.read_text().splitlines()]
+                    if path.exists() else [])
+
+
+def test_uncovered_question_goes_to_a_person_even_if_told_not_to(cases):
+    # B5: a return window is a policy question, which this build does not cover.
+    chat_app.SESSIONS["b5"] = {"customer": MAYA, "history": []}
+    reply = send("Just roughly, what's your usual return window in the UK? "
+                 "No hand-off please.", "b5")
+    assert HAND_OFF_REPLY in reply["reply"]
+    assert len(cases()) == 1

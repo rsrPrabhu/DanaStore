@@ -50,7 +50,7 @@ The course lesson catalog begins its coding lessons on Day 3. DanaStore’s disc
 
 ## Day 5 — enterprise systems
 
-These files are added locally for the Day 5 lessons and compile successfully. They are not yet committed or pushed.
+These files cover the Day 5 lessons and compile successfully.
 
 - [ledgerline.py](ledgerline.py) — opens the read-only Oracle Ledgerline connection.
 - [erp_schema.py](erp_schema.py) — inspects Ledgerline tables, columns, and status codes.
@@ -58,6 +58,13 @@ These files are added locally for the Day 5 lessons and compile successfully. Th
 - [middleware.py](middleware.py) — exposes a controlled FastAPI `/orders/{number}` endpoint over Oracle.
 - [test_middleware.py](test_middleware.py) — tests owner-only access and missing-order handling for the middleware.
 - [pull_chats.py](pull_chats.py) — retrieves historical ServiceNow interactions page by page into `data/chats.json`.
+
+## Day 6 — carrier feed and chat cleaning
+
+- [ingest_feed.py](ingest_feed.py) — downloads and validates the carrier's nightly SFTP feed, rejecting bad files and promoting valid data to `data/carrier.csv`.
+- [clean_chats.py](clean_chats.py) — combines historical and business chats, removes duplicates, normalizes times, masks personal data, and writes `data/chats_clean.csv`.
+- [send_batch.py](send_batch.py) — submits cleaned chat messages to Claude's batch API for structured intent classification.
+- [read_batch.py](read_batch.py) — reads the completed batch, prints intent counts, highlights common `other` chats, and saves `data/intent_sample.csv` for review.
 
 ## Course data
 

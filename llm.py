@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = Anthropic()
 MODEL = "claude-sonnet-5-5"
+BATCH_MODEL = "claude-haiku-5-5"
 
 
 def ask(prompt, schema=None, model=MODEL, usage=None):
